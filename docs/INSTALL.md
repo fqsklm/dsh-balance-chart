@@ -304,6 +304,19 @@ git pull
 > 「宿主侧能不能不重启就热更新」这个问题已经试过五种方案，全部失败，原因写在 README 的常见问题里。
 > 结论就一句：**改宿主代码 = 重启 `dsh web`**。
 
+### 如果 `git pull` / `git push` 报 TLS 错误
+
+少数 Windows 环境下 `git` 的 schannel 后端会因为拿不到系统凭证而失败，报
+`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`。在这个仓库里改用 OpenSSL 后端即可：
+
+```powershell
+# 只对本仓库生效（不会动你的全局 git 配置）
+git config --local http.sslBackend openssl
+git config --local http.sslCAInfo "C:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt"
+```
+
+（`git` 装在别处的话，用 `git --exec-path` 找到安装目录，把上面的路径换成 `<安装目录>\..\mingw64\etc\ssl\certs\ca-bundle.crt`。）
+
 ---
 
 ## 怎么卸载
