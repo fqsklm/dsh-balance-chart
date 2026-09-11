@@ -304,18 +304,44 @@ git pull
 > 「宿主侧能不能不重启就热更新」这个问题已经试过五种方案，全部失败，原因写在 README 的常见问题里。
 > 结论就一句：**改宿主代码 = 重启 `dsh web`**。
 
-### 如果 `git pull` / `git push` 报 TLS 错误
+### 如果 `git clone` / `git pull` / `git push` 连不上或报 TLS 错误
 
-少数 Windows 环境下 `git` 的 schannel 后端会因为拿不到系统凭证而失败，报
-`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`。在这个仓库里改用 OpenSSL 后端即可：
+Windows 上遇到过两种，症状和修法都不一样，**先分辨再动手**：
+
+**① 连不上：`Failed to connect to github.com port 443`（等 20 秒后超时）**
+
+这是 **DNS 解析出来的 IP 不通**（`github.com` 在不同地区会解析到不同的地址段，被墙或被运营商劫持时就会这样）。
+先确认：
 
 ```powershell
-# 只对本仓库生效（不会动你的全局 git 配置）
-git config --local http.sslBackend openssl
-git config --local http.sslCAInfo "C:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt"
+Resolve-DnsName github.com -Type A | Select-Object Name, IPAddress
+Test-NetConnection (Resolve-DnsName github.com -Type A).IPAddress -Port 443
 ```
 
-（`git` 装在别处的话，用 `git --exec-path` 找到安装目录，把上面的路径换成 `<安装目录>\..\mingw64\etc\ssl\certs\ca-bundle.crt`。）
+如果 `TcpTestSucceeded` 是 `False`，但换成另外几个 GitHub 地址段是通的：
+
+```powershell
+foreach ($ip in @('140.82.113.3','140.82.114.3','20.27.177.113')) {
+  "{0} -> {1}" -f $ip, (Test-NetConnection $ip -Port 443 -WarningAction SilentlyContinue).TcpTestSucceeded
+}
+```
+
+那就让 git 直接连那个能通的 IP（**只对当前仓库生效**，会正常校验 TLS 证书，因为 SNI 仍然是 `github.com`）：
+
+```powershell
+git config --local http.curloptResolve "github.com:443:140.82.113.3"
+```
+
+> 这个 IP 是 GitHub 的地址之一，随时可能变。它只是「临时绕开坏掉的 DNS」，不是长久之计——
+> 换 DNS（比如 `1.1.1.1`）、或者把 `github.com` 的正确 IP 写进系统 hosts 才是根治。
+> 换过 DNS 之后记得 `git config --local --unset http.curloptResolve`。
+
+**② TLS 凭证错误：`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS`**
+
+这是 Windows 的 schannel 拿不到当前用户的凭证（常见于受限权限 / 服务账户 / 特殊安全策略下运行的终端），
+和仓库本身无关。换一个正常的 PowerShell 窗口、或者以你自己的账户重新打开终端再试通常就好了。
+（注意 `http.sslBackend=openssl` 这条网上常见的偏方对 Git for Windows 的官方构建**无效**——
+那个构建只带 schannel，设了只会报 `Unsupported SSL backend 'openssl'`。）
 
 ---
 
