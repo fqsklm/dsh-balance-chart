@@ -1,0 +1,25 @@
+# 仓库里全是源代码和文档：统一按 LF 存，避免 Windows 上的 CRLF 到处 diff
+* text=auto eol=lf
+
+# Windows 批处理脚本必须保留 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制：不要做换行转换，diff 时也不要当文本看
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# 文档与快照
+*.md text diff=markdown
+*.json text
+*.yml text
+*.mjs text
+*.js text
+
+# 语言统计（GitHub 语言条）不需要把生成的预览页算进去
+preview/** linguist-documentation
+docs/images/** linguist-documentation

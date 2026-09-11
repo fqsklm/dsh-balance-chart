@@ -1,0 +1,21 @@
+# ============================================================================
+# dsh-balance-chart —— DSH bundle patch
+# ============================================================================
+# 这个文件故意是空的（`[]`）。
+#
+# 原因：插件的激活行（loader row）放在 profile 自己的 patch 层里，也就是
+#   $DSH_HOME/profiles/web/cordis.patch.yml
+# 这样做的唯一目的是让 web profile 的 `patchReload: live` 监听器能立刻生效，
+# 不必重启 `dsh web`。
+#
+# 如果这里也写一份 insert，配置树里就会出现两行同 id 的 loader 行，
+# 两个实例会抢同样的 HTTP 路由（webServer.register 对重复路径会抛错）。
+#
+# 所以：package.json 里保留 dsh.bundle.patch 只是为了满足
+# 「bundles 里的包必须声明 dsh.bundle」这条启动校验；
+# 真正把插件挂进树里的是 profile 的 cordis.patch.yml。
+#
+# 安装步骤见 README.md。
+# ============================================================================
+
+[]

@@ -1,0 +1,22 @@
+# 生成物：预览页、截屏、量测报告都可以用脚本重新生成，不进仓库
+# （README 引用的图在 docs/images/ 里，那些是要提交的）
+preview/*.html
+preview/shots/
+preview/layout-report.json
+
+# 依赖与日志
+node_modules/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本机的临时试验文件
+/tmp/
+*.local.*
